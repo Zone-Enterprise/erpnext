@@ -68,15 +68,11 @@ class PurchaseInvoice(BuyingController):
 		from erpnext.accounts.doctype.purchase_invoice_advance.purchase_invoice_advance import (
 			PurchaseInvoiceAdvance,
 		)
-		from erpnext.accounts.doctype.purchase_invoice_item.purchase_invoice_item import (
-			PurchaseInvoiceItem,
-		)
+		from erpnext.accounts.doctype.purchase_invoice_item.purchase_invoice_item import PurchaseInvoiceItem
 		from erpnext.accounts.doctype.purchase_taxes_and_charges.purchase_taxes_and_charges import (
 			PurchaseTaxesandCharges,
 		)
-		from erpnext.accounts.doctype.tax_withheld_vouchers.tax_withheld_vouchers import (
-			TaxWithheldVouchers,
-		)
+		from erpnext.accounts.doctype.tax_withheld_vouchers.tax_withheld_vouchers import TaxWithheldVouchers
 		from erpnext.buying.doctype.purchase_receipt_item_supplied.purchase_receipt_item_supplied import (
 			PurchaseReceiptItemSupplied,
 		)
@@ -1067,7 +1063,7 @@ class PurchaseInvoice(BuyingController):
 						)
 
 						# check if the exchange rate has changed
-						if item.get("purchase_receipt"):
+						if item.get("purchase_receipt") and self.auto_accounting_for_stock:
 							if (
 								exchange_rate_map[item.purchase_receipt]
 								and self.conversion_rate != exchange_rate_map[item.purchase_receipt]
@@ -1151,7 +1147,7 @@ class PurchaseInvoice(BuyingController):
 		pr_items = frappe.get_all(
 			"Purchase Receipt Item",
 			filters={"parent": ("in", linked_purchase_receipts)},
-			fields=["name", "provisional_expense_account", "qty", "base_rate"],
+			fields=["name", "provisional_expense_account", "qty", "base_rate", "rate"],
 		)
 		default_provisional_account = self.get_company_default("default_provisional_account")
 		provisional_accounts = set(
@@ -1179,6 +1175,7 @@ class PurchaseInvoice(BuyingController):
 				"provisional_account": item.provisional_expense_account or default_provisional_account,
 				"qty": item.qty,
 				"base_rate": item.base_rate,
+				"rate": item.rate,
 				"has_provisional_entry": item.name in rows_with_provisional_entries,
 			}
 
@@ -1195,7 +1192,10 @@ class PurchaseInvoice(BuyingController):
 					self.posting_date,
 					pr_item.get("provisional_account"),
 					reverse=1,
-					item_amount=(min(item.qty, pr_item.get("qty")) * pr_item.get("base_rate")),
+					item_amount=(
+						(min(item.qty, pr_item.get("qty")) * pr_item.get("rate"))
+						* purchase_receipt_doc.get("conversion_rate")
+					),
 				)
 
 	def update_gross_purchase_amount_for_linked_assets(self, item):
@@ -1211,7 +1211,7 @@ class PurchaseInvoice(BuyingController):
 				asset.name,
 				{
 					"gross_purchase_amount": purchase_amount,
-					"purchase_receipt_amount": purchase_amount,
+					"purchase_amount": purchase_amount,
 				},
 			)
 
