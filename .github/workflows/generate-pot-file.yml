@@ -36,3 +36,4 @@ jobs:
           env:
             GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
             BASE_BRANCH: ${{ matrix.branch }}
+
