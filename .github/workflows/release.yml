@@ -29,3 +29,4 @@ jobs:
           GIT_COMMITTER_NAME: "Frappe PR Bot"
           GIT_COMMITTER_EMAIL: "developers@frappe.io"
         run: npx semantic-release
+
