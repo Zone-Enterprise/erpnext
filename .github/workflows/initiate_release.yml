@@ -30,3 +30,4 @@ jobs:
           head: version-${{ matrix.version }}-hotfix
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
