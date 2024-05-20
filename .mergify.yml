@@ -99,3 +99,4 @@ pull_request_rules:
             {{ title }} (#{{ number }})
 
             {{ body }}
+
