@@ -53,3 +53,4 @@ projects:
 needs-tests:
 - any: ['erpnext/**/*.py']
   all: ['!erpnext/**/test*.py']
+
